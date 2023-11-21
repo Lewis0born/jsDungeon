@@ -13,6 +13,31 @@ let fpsRate = '...';
 const WIDTH = 300, HALF_WIDTH = 150;
 const HEIGHT = 200, HALF_HEIGHT = 100;
 
+// map
+const MAP_SIZE = 16;
+const MAP_SCALE = 10;
+const MAP_RANGE = MAP_SCALE * MAP_SIZE;
+const MAP_SPEED = (MAP_SCALE / 2) / 10; // speed of player movement
+
+let map = [
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,  
+];
+
 // game loop
 function gameLoop(){
 
@@ -35,12 +60,27 @@ function gameLoop(){
     canvas.height = window.innerHeight * 0.2;
 
     // update the canvas
-    context.fillStyle = 'Black';
-    context.fillRect(0, 0, canvas.width, canvas.height);
     context.fillStyle = 'White';
     context.fillRect(canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT, WIDTH, HEIGHT);
-    
 
+    // draw map
+    for (let row = 0; row < MAP_SIZE; row++){
+        for (let col = 0; col < MAP_SIZE; col++){
+            let square = row * MAP_SIZE + col;
+
+            // draw rect if map tile == 1
+            if(map[square] == 1){
+                context.fillStyle = '#555';
+                context.fillRect(Math.floor(canvas.width / 2 - MAP_RANGE / 2) + col * MAP_SCALE, 
+                                Math.floor(canvas.height / 2 - MAP_RANGE / 2) +row * MAP_SCALE, MAP_SCALE, MAP_SCALE);
+            } else {
+                context.fillStyle = '#aaa';
+                context.fillRect(Math.floor(canvas.width / 2 - MAP_RANGE / 2) + col * MAP_SCALE, 
+                                Math.floor(canvas.height / 2 - MAP_RANGE / 2) +row * MAP_SCALE, MAP_SCALE, MAP_SCALE);
+            }
+        }
+    }
+    
     // infinite loop
     setTimeout(gameLoop, cycleDelay);
 
