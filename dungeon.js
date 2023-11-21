@@ -30,9 +30,9 @@ let map = [
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
@@ -64,8 +64,8 @@ document.onkeydown = function(event){
             break;
         // ArrowUp
         case 38:
-            playerMoveX = +1;
-            playerMoveY = +1;
+            playerMoveX = 1;
+            playerMoveY = 1;
             break;
         // ArrowLeft
         case 37:
@@ -127,16 +127,20 @@ function gameLoop(){
 
     // update player position
     // Move forward along playerAngle (* by map_speed makes movement speed relative to map)
-    let playerOffsetX = Math.sin(playerAngle) * MAP_SPEED;
-    let playerOffsetY = Math.cos(playerAngle) * MAP_SPEED;
-    // move player
-    if(playerMoveX) {
+    var playerOffsetX = Math.sin(playerAngle) * MAP_SPEED;
+    var playerOffsetY = Math.cos(playerAngle) * MAP_SPEED;
+
+    // check for collisions before updating player position
+    var mapTargetX = Math.floor((playerY + playerOffsetY) / MAP_SCALE) * MAP_SIZE + Math.floor((playerX + playerOffsetX * playerMoveX) / MAP_SCALE);
+    var mapTargetY = Math.floor((playerY + playerOffsetY * playerMoveY) / MAP_SCALE) * MAP_SIZE + Math.floor(playerX / MAP_SCALE);
+    // move player based on collisions
+    if (playerMoveX && map[mapTargetX] == 0) {
         playerX += playerOffsetX * playerMoveX;
     }
-    if(playerMoveY){
+    if (playerMoveY && map[mapTargetY] == 0) {
         playerY += playerOffsetY * playerMoveY;
     }
-    if(playerMoveAngle){
+    if (playerMoveAngle) {
         playerAngle += 0.03 * playerMoveAngle;
     }
 
