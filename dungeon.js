@@ -1,3 +1,9 @@
+/**************************************************************
+ * 
+ *                jsDungeon - make it sp00ky
+ * 
+ **************************************************************/
+
 //init canvas
 const canvas = document.getElementById('canvas');
 const context = canvas.getContext('2d');
@@ -44,6 +50,52 @@ let playerX = MAP_SCALE + 20;
 let playerY = MAP_SCALE + 20;
 // where player is initially facing
 let playerAngle = Math.PI / 3;
+let playerMoveX = 0;
+let playerMoveY = 0;
+let playerMoveAngle = 0;
+
+// handle user inputs
+document.onkeydown = function(event){
+    switch(event.keyCode){
+        // ArrowDown
+        case 40: 
+            playerMoveX = -1; 
+            playerMoveY = -1;
+            break;
+        // ArrowUp
+        case 38:
+            playerMoveX = +1;
+            playerMoveY = +1;
+            break;
+        // ArrowLeft
+        case 37:
+            playerMoveAngle = 1;
+            break;
+        // ArrowRight
+        case 39:
+            playerMoveAngle = -1;
+            break;
+    }
+}
+
+// reset playerMove variables to zero when key not pressed
+document.onkeyup = function(event) {
+    switch(event.keyCode){
+        // ArrowDown
+        case 40: 
+        // ArrowUp
+        case 38:
+            playerMoveX = 0;
+            playerMoveY = 0;
+            break;
+        // ArrowLeft
+        case 37:
+        // ArrowRight
+        case 39:
+            playerMoveAngle = 0;
+            break;
+    }
+}
 
 // camera
 const DOUBLE_PIE = 2 * Math.PI;
@@ -72,6 +124,21 @@ function gameLoop(){
     // update the canvas
     context.fillStyle = 'Black';
     context.fillRect(canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT, WIDTH, HEIGHT);
+
+    // update player position
+    // Move forward along playerAngle (* by map_speed makes movement speed relative to map)
+    let playerOffsetX = Math.sin(playerAngle) * MAP_SPEED;
+    let playerOffsetY = Math.cos(playerAngle) * MAP_SPEED;
+    // move player
+    if(playerMoveX) {
+        playerX += playerOffsetX * playerMoveX;
+    }
+    if(playerMoveY){
+        playerY += playerOffsetY * playerMoveY;
+    }
+    if(playerMoveAngle){
+        playerAngle += 0.03 * playerMoveAngle;
+    }
 
     // draw map
     let mapOffsetX = Math.floor(canvas.width / 2 - MAP_RANGE / 2);
