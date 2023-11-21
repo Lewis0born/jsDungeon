@@ -19,6 +19,7 @@ const MAP_SCALE = 10;
 const MAP_RANGE = MAP_SCALE * MAP_SIZE;
 const MAP_SPEED = (MAP_SCALE / 2) / 10; // speed of player movement
 
+// each integer associate with different textures
 let map = [
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
@@ -60,7 +61,7 @@ function gameLoop(){
     canvas.height = window.innerHeight * 0.2;
 
     // update the canvas
-    context.fillStyle = 'White';
+    context.fillStyle = 'Black';
     context.fillRect(canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT, WIDTH, HEIGHT);
 
     // draw map
@@ -69,12 +70,12 @@ function gameLoop(){
             let square = row * MAP_SIZE + col;
 
             // draw rect if map tile == 1
-            if(map[square] == 1){
-                context.fillStyle = '#555';
+            if(map[square] != 0){
+                context.fillStyle = 'tomato';
                 context.fillRect(Math.floor(canvas.width / 2 - MAP_RANGE / 2) + col * MAP_SCALE, 
                                 Math.floor(canvas.height / 2 - MAP_RANGE / 2) +row * MAP_SCALE, MAP_SCALE, MAP_SCALE);
             } else {
-                context.fillStyle = '#aaa';
+                context.fillStyle = 'Black';
                 context.fillRect(Math.floor(canvas.width / 2 - MAP_RANGE / 2) + col * MAP_SCALE, 
                                 Math.floor(canvas.height / 2 - MAP_RANGE / 2) +row * MAP_SCALE, MAP_SCALE, MAP_SCALE);
             }
