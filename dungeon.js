@@ -45,6 +45,8 @@ let map = [
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,  
 ];
 
+let showMap = false;
+
 // player
 let playerX = MAP_SCALE + 20;
 let playerY = MAP_SCALE + 20;
@@ -75,6 +77,9 @@ document.onkeydown = function(event){
         case 39:
             playerMoveAngle = -1;
             break;
+        case 16:
+            showMap = true;
+            break;
     }
 }
 
@@ -93,6 +98,9 @@ document.onkeyup = function(event) {
         // ArrowRight
         case 39:
             playerMoveAngle = 0;
+            break;
+        case 16:
+            showMap = false;
             break;
     }
 }
@@ -148,45 +156,11 @@ function gameLoop(){
     }
 
     // calculate map and player offsets 
-    let mapOffsetX = Math.floor(canvas.width / 2 - MAP_RANGE / 2);
-    let mapOffsetY = Math.floor(canvas.height / 2 - MAP_RANGE / 2); 
+    let mapOffsetX = Math.floor(canvas.width / 2) - 149;
+    let mapOffsetY = 4; 
     // 
-    let playerMapX = playerX + mapOffsetX;
-    let playerMapY = playerY + mapOffsetY;
-
-    // draw 2d map
-    for (let row = 0; row < MAP_SIZE; row++){
-        for (let col = 0; col < MAP_SIZE; col++){
-            let square = row * MAP_SIZE + col;
-
-            // draw rect if map tile == 1
-            if(map[square] != 0){
-                context.fillStyle = 'tomato';
-                context.fillRect(mapOffsetX + col * MAP_SCALE, mapOffsetY + row * MAP_SCALE, MAP_SCALE, MAP_SCALE);
-            } else {
-                context.fillStyle = 'Black';
-                context.fillRect(mapOffsetX + col * MAP_SCALE, mapOffsetY + row * MAP_SCALE, MAP_SCALE, MAP_SCALE);
-            }
-        }
-    }
-
-    // draw player on 2d map
-    context.fillStyle = 'White';
-    context.beginPath();
-    context.arc(playerMapX, playerMapY, 2, 0, DOUBLE_PIE);
-    context.fill();
-    // draw line to show player direction
-    context.strokeStyle = 'White';
-    context.lineWidth = 1;
-    context.beginPath();
-    context.moveTo(playerMapX, playerMapY);
-    // Calculate endpoint coordinates based on player position, direction, and line length
-    const lineLength = 5; // Adjust line length 
-    const endpointX = playerX + lineLength * Math.sin(playerAngle);
-    const endpointY = playerY + lineLength * Math.cos(playerAngle);
-    // Draw the line to the calculated endpoint
-    context.lineTo(endpointX + mapOffsetX, endpointY + mapOffsetY);
-    context.stroke();
+    let playerMapX = (playerX / MAP_SCALE) * 5 + mapOffsetX;
+    let playerMapY = (playerY / MAP_SCALE) * 5 + mapOffsetY;
 
     // RAYCASTING..
     let currentAngle = playerAngle + HALF_FOV;
@@ -228,10 +202,6 @@ function gameLoop(){
             }
             rayEndX += rayDirectionX * MAP_SCALE;
         }
-
-        // temp endX and endY targets
-        let tempY = rayEndY;
-        let tempX = rayEndX;
      
         // horizontal line intersection
         var rayDirectionY, horizontalDepth;
@@ -261,21 +231,45 @@ function gameLoop(){
             rayEndY += rayDirectionY * MAP_SCALE;
         }
 
-        let endX = verticalDepth < horizontalDepth ? tempX : rayEndX;
-        let endY = verticalDepth < horizontalDepth ? tempY : rayEndY;
-
-        // draw ray
-        context.strokeStyle = 'Yellow';
-        context.lineWidth = 1;
-        context.beginPath();
-        context.moveTo(playerMapX, playerMapY);
-        context.lineTo(endX + mapOffsetX, endY + mapOffsetY);
-        context.stroke();
-
-
         // update current angle
         currentAngle -= STEP_ANGLE;
-        
+    }
+
+    // draw map on left shift
+    if(showMap){
+        // draw 2d map
+        for (let row = 0; row < MAP_SIZE; row++){
+            for (let col = 0; col < MAP_SIZE; col++){
+                let square = row * MAP_SIZE + col;
+
+                // draw rect if map tile == 1
+                if(map[square] != 0){
+                    context.fillStyle = 'tomato';
+                    context.fillRect(mapOffsetX + col * 5, mapOffsetY + row * 5, 5, 5);
+                } else {
+                    context.fillStyle = 'Black';
+                    context.fillRect(mapOffsetX + col * 5, mapOffsetY + row * 5, 5, 5);
+                }
+            }
+        }
+
+        // Calculate endpoint coordinates based on player position, direction, and line length
+        const lineLength = 5; // Adjust line length 
+        const endpointX = playerX + lineLength * Math.sin(playerAngle);
+        const endpointY = playerY + lineLength * Math.cos(playerAngle);
+
+        // draw player on 2d map
+        context.fillStyle = 'White';
+        context.beginPath();
+        context.arc(playerMapX, playerMapY, 2, 0, DOUBLE_PIE);
+        context.fill();
+        // draw line to show player direction
+        context.strokeStyle = 'White';
+        context.lineWidht = 1;
+        context.beginPath();
+        context.moveTo(playerMapX, playerMapY);
+        context.lineTo(playerMapX + Math.sin(playerAngle) * 5, playerMapY + Math.cos(playerAngle) * 5);
+        context.stroke();
     }
 
     // infinite loop
