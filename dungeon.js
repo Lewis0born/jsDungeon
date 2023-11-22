@@ -158,16 +158,14 @@ function gameLoop(){
     canvas.width = window.innerWidth * 0.2;
     canvas.height = window.innerHeight * 0.2;
 
-    
-
     // update player position
     // Move forward along playerAngle (* by map_speed makes movement speed relative to map)
     var playerOffsetX = Math.sin(playerAngle) * MAP_SPEED;
     var playerOffsetY = Math.cos(playerAngle) * MAP_SPEED;
 
     // check for collisions before updating player position
-    var mapTargetX = Math.floor((playerY + playerOffsetY) / MAP_SCALE) * MAP_SIZE + Math.floor((playerX + playerOffsetX * playerMoveX) / MAP_SCALE);
-    var mapTargetY = Math.floor((playerY + playerOffsetY * playerMoveY) / MAP_SCALE) * MAP_SIZE + Math.floor(playerX / MAP_SCALE);
+    var mapTargetX = Math.floor((playerY + playerOffsetY) / MAP_SCALE) * MAP_SIZE + Math.floor((playerX + playerOffsetX * playerMoveX * 10) / MAP_SCALE);
+    var mapTargetY = Math.floor((playerY + playerOffsetY * playerMoveY * 10) / MAP_SCALE) * MAP_SIZE + Math.floor(playerX / MAP_SCALE);
     // move player based on collisions
     if (playerMoveX && map[mapTargetX] == 0) {
         playerX += playerOffsetX * playerMoveX;
