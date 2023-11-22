@@ -231,9 +231,21 @@ function gameLoop(){
             rayEndY += rayDirectionY * MAP_SCALE;
         }
 
+        // 3D Projection (one pixel rect per ray)
+        // fisheye caused by longer rays the further offcenter
+        let depth = verticalDepth < horizontalDepth ? verticalDepth : horizontalDepth;
+        //fix fisheye
+        depth *= Math.cos(playerAngle - currentAngle);
+        let wallHeight = Math.min(MAP_SCALE * 300 / (depth + 0.0001), HEIGHT);
+        context.fillStyle = verticalDepth < horizontalDepth ? 'tomato': 'coral';
+        context.fillRect(mapOffsetX + ray, mapOffsetY + (HEIGHT / 2 - wallHeight / 2), 1, wallHeight);
+
         // update current angle
         currentAngle -= STEP_ANGLE;
     }
+
+    
+
 
     // draw map on left shift
     if(showMap){
