@@ -28,20 +28,20 @@ const MAP_SPEED = (MAP_SCALE / 2) / 10; // speed of player movement
 // each integer associate with different textures
 let map = [
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
+    1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,1,1,1,1,1,1,0,1,1,1,1,
+    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
+    1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,1,
     1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
     1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
     1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,  
 ];
 
@@ -99,6 +99,9 @@ document.onkeyup = function(event) {
 
 // camera
 const DOUBLE_PIE = 2 * Math.PI;
+const FOV = Math.PI / 3;
+const HALF_FOV = FOV / 2;
+const STEP_ANGLE = FOV / WIDTH;
 
 // game loop
 function gameLoop(){
@@ -144,10 +147,14 @@ function gameLoop(){
         playerAngle += 0.03 * playerMoveAngle;
     }
 
-    // draw map
+    // calculate map and player offsets 
     let mapOffsetX = Math.floor(canvas.width / 2 - MAP_RANGE / 2);
-    let mapOffsetY = Math.floor(canvas.height / 2 - MAP_RANGE / 2) 
+    let mapOffsetY = Math.floor(canvas.height / 2 - MAP_RANGE / 2); 
+    // 
+    let playerMapX = playerX + mapOffsetX;
+    let playerMapY = playerY + mapOffsetY;
 
+    // draw 2d map
     for (let row = 0; row < MAP_SIZE; row++){
         for (let col = 0; col < MAP_SIZE; col++){
             let square = row * MAP_SIZE + col;
@@ -163,28 +170,67 @@ function gameLoop(){
         }
     }
 
-    // draw player
-    let playerMapX = playerX + mapOffsetX;
-    let playerMapY = playerY + mapOffsetY;
-
+    // draw player on 2d map
     context.fillStyle = 'White';
     context.beginPath();
     context.arc(playerMapX, playerMapY, 2, 0, DOUBLE_PIE);
     context.fill();
-
     // draw line to show player direction
     context.strokeStyle = 'White';
     context.lineWidth = 1;
     context.beginPath();
     context.moveTo(playerMapX, playerMapY);
-
     // Calculate endpoint coordinates based on player position, direction, and line length
     const lineLength = 5; // Adjust line length 
     const endpointX = playerX + lineLength * Math.sin(playerAngle);
     const endpointY = playerY + lineLength * Math.cos(playerAngle);
-
     // Draw the line to the calculated endpoint
     context.lineTo(endpointX + mapOffsetX, endpointY + mapOffsetY);
+    context.stroke();
+
+    // raycasting..
+    let currentAngle = playerAngle;
+    let rayStartX = Math.floor(playerX / MAP_SCALE) * MAP_SCALE; //convert player position to start of tile
+    let rayStartY = Math.floor(playerY / MAP_SCALE) * MAP_SCALE;
+
+    let currentSin = Math.sin(currentAngle);
+    currentSin = currentSin ? currentSin : 0.000001;
+    let currentCos = Math.cos(currentAngle);
+    currentCos = currentCos ? currentCos : 0.000001;
+
+    // vertical line intersection
+    let rayEndX, rayEndY, rayDirectionX, verticalDepth;
+    if (currentSin > 0) {
+        rayEndX = rayStartX + MAP_SCALE;
+        rayDirectionX = 1;
+    } else {
+        rayEndX = rayStartX, rayDirectionX = -1;
+    }
+
+    for (let offset = 0; offset < MAP_RANGE; offset += MAP_SCALE){
+        verticalDepth = (rayEndX - playerX) / currentSin;
+        rayEndY = playerY + verticalDepth * currentCos;
+        let mapTargetX = Math.floor(rayEndX / MAP_SCALE); //which tile?
+        let mapTargetY = Math.floor(rayEndY / MAP_SCALE);
+        if(currentSin <= 0){
+            mapTargetX += rayDirectionX;
+        }
+        let targetSquare = mapTargetY * MAP_SIZE + mapTargetX;
+        if(targetSquare < 0 || targetSquare > map.length - 1){
+            break;
+        }
+        if (map[targetSquare] != 0){
+            break;
+        }
+        rayEndX += rayDirectionX * MAP_SCALE;
+    }
+
+    // draw ray
+    context.strokeStyle = 'Yellow';
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(playerMapX, playerMapY);
+    context.lineTo(rayEndX + mapOffsetX, rayEndY + mapOffsetY);
     context.stroke();
     
     // infinite loop
