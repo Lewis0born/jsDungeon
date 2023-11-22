@@ -21,7 +21,7 @@ let fpsRate = '...';
 
 // map
 const MAP_SIZE = 32;
-const MAP_SCALE = 10;
+const MAP_SCALE = 64;
 const MAP_RANGE = MAP_SCALE * MAP_SIZE;
 const MAP_SPEED = (MAP_SCALE / 2) / 10; // speed of player movement
 
@@ -33,16 +33,16 @@ let map = [
     1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
     1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
     1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,1,1,1,1,1,1,0,1,1,1,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
+    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,
+    1,0,0,0,0,1,1,1,1,1,1,0,1,1,1,1,1,0,0,1,1,1,0,0,0,0,1,1,0,0,0,1,
+    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,1,1,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,1,1,0,0,0,1,
+    1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,0,0,0,1,
     1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
     1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
     1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
     1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
+    1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
     1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,
     1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
     1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
@@ -127,6 +127,16 @@ const FOV = Math.PI / 3;
 const HALF_FOV = FOV / 2;
 const STEP_ANGLE = FOV / WIDTH;
 
+// graphics/textures
+const WALLS = [];
+
+// load wall textures
+for(let fileName = 0; fileName < 6; fileName++){
+    let image = document.createElement('img');
+    image.src = 'assets/' + fileName + '.png';
+    WALLS.push(image);
+}
+
 // game loop
 function gameLoop(){
 
@@ -148,9 +158,7 @@ function gameLoop(){
     canvas.width = window.innerWidth * 0.2;
     canvas.height = window.innerHeight * 0.2;
 
-    // update the canvas
-    context.fillStyle = 'Black';
-    context.fillRect(canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT, WIDTH, HEIGHT);
+    
 
     // update player position
     // Move forward along playerAngle (* by map_speed makes movement speed relative to map)
@@ -172,11 +180,15 @@ function gameLoop(){
     }
 
     // calculate map and player offsets 
-    let mapOffsetX = Math.floor(canvas.width / 2) - 149;
-    let mapOffsetY = 4; 
+    let mapOffsetX = Math.floor(canvas.width / 2) - HALF_WIDTH;
+    let mapOffsetY = Math.floor(canvas.height / 2) - HALF_HEIGHT; 
     // 
     let playerMapX = (playerX / MAP_SCALE) * 5 + mapOffsetX;
     let playerMapY = (playerY / MAP_SCALE) * 5 + mapOffsetY;
+
+    // draw background (floor and ceiling)
+    context.drawImage(WALLS[0], canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT);
+
 
     // RAYCASTING..
     let currentAngle = playerAngle + HALF_FOV;
@@ -193,7 +205,7 @@ function gameLoop(){
         currentCos = currentCos ? currentCos : 0.000001;
 
         // vertical line intersection
-        let rayEndX, rayEndY, rayDirectionX, verticalDepth;
+        let rayEndX, rayEndY, rayDirectionX, verticalDepth, textureEndY, textureY;
         if (currentSin > 0) {
             rayEndX = rayStartX + MAP_SCALE;
             rayDirectionX = 1;
@@ -218,9 +230,11 @@ function gameLoop(){
             }
             rayEndX += rayDirectionX * MAP_SCALE;
         }
+        textureEndY = rayEndY;
+
      
         // horizontal line intersection
-        var rayDirectionY, horizontalDepth;
+        var rayDirectionY, horizontalDepth, textureEndX, textureX;
         if (currentCos > 0) {
             rayEndY = rayStartY + MAP_SCALE;
             rayDirectionY = 1;
@@ -246,23 +260,37 @@ function gameLoop(){
             }
             rayEndY += rayDirectionY * MAP_SCALE;
         }
+        textureEndX = rayEndX;
 
         // 3D Projection (one pixel rect per ray)
         // fisheye caused by longer rays the further offcenter
         let depth = verticalDepth < horizontalDepth ? verticalDepth : horizontalDepth;
+        // find beginning of tile, so we know where to start drawing texture
+        let textureOffset = verticalDepth < horizontalDepth ? textureEndY : textureEndX;
+        textureOffset = Math.floor(textureOffset) - Math.floor(textureOffset / MAP_SCALE) * MAP_SCALE;
         //fix fisheye
         depth *= Math.cos(playerAngle - currentAngle);
-        let wallHeight = Math.min(MAP_SCALE * 300 / (depth + 0.0001), HEIGHT);
-        context.fillStyle = verticalDepth < horizontalDepth ? 'tomato': 'coral';
-        context.fillRect(mapOffsetX + ray, mapOffsetY + (HEIGHT / 2 - wallHeight / 2), 1, wallHeight);
+        let wallHeight = Math.floor(Math.min(MAP_SCALE * 300 / (depth + 0.0001)), 5000);
+        context.fillStyle = verticalDepth < horizontalDepth ? 'black': 'black';
+        context.fillRect(mapOffsetX + ray, mapOffsetY + (HALF_HEIGHT - wallHeight / 2), 1, wallHeight);
+        // Draw texture 
+        context.drawImage(
+            WALLS[1],
+            textureOffset,                                               // source image x offset
+            0,                                                           // source image y offset
+            1,                                                           // source image width
+            64,                                                          // source image height
+            mapOffsetX + ray,                                            // target image x offset 
+            mapOffsetY + (HALF_HEIGHT - Math.floor(wallHeight / 2)),     // target image y offset
+            1,                                                           // target image width
+            wallHeight,                                                  // target image height
+        );
 
         // update current angle
         currentAngle -= STEP_ANGLE;
     }
 
     
-
-
     // draw map on left shift
     if(showMap){
         // draw 2d map
@@ -299,6 +327,11 @@ function gameLoop(){
         context.lineTo(playerMapX + Math.sin(playerAngle) * 5, playerMapY + Math.cos(playerAngle) * 5);
         context.stroke();
     }
+
+    // fix wall layout
+    context.fillStyle = 'Black';
+    context.fillRect(0, 0, canvas.width, mapOffsetY);
+    context.fillRect(0, mapOffsetY + 200, canvas.width, canvas.width - mapOffsetY + 200);
 
     // infinite loop
     setTimeout(gameLoop, cycleDelay);
