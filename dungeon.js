@@ -111,25 +111,27 @@ let playerMoveAngle = 0;
 
 // handle user inputs
 document.onkeydown = function(event){
+    console.log(event.keyCode);
     switch(event.keyCode){
-        // ArrowDown
-        case 40: 
+        // ArrowDown (40), s=83
+        case 83: 
             playerMoveX = -1; 
             playerMoveY = -1;
             break;
-        // ArrowUp
-        case 38:
+        // ArrowUp (38), w=87
+        case 87:
             playerMoveX = 1;
             playerMoveY = 1;
             break;
-        // ArrowLeft
-        case 37:
+        // ArrowLeft (37), a=65
+        case 65:
             playerMoveAngle = 1;
             break;
-        // ArrowRight
-        case 39:
+        // ArrowRight (39), d=68
+        case 68:
             playerMoveAngle = -1;
             break;
+        // shift for map
         case 16:
             showMap = true;
             break;
@@ -140,18 +142,19 @@ document.onkeydown = function(event){
 document.onkeyup = function(event) {
     switch(event.keyCode){
         // ArrowDown
-        case 40: 
+        case 83: 
         // ArrowUp
-        case 38:
+        case 87:
             playerMoveX = 0;
             playerMoveY = 0;
             break;
         // ArrowLeft
-        case 37:
+        case 65:
         // ArrowRight
-        case 39:
+        case 68:
             playerMoveAngle = 0;
             break;
+        // shift for map
         case 16:
             showMap = false;
             break;
