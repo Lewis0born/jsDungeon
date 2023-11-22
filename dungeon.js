@@ -188,99 +188,96 @@ function gameLoop(){
     context.lineTo(endpointX + mapOffsetX, endpointY + mapOffsetY);
     context.stroke();
 
-    // raycasting..
-    let currentAngle = playerAngle;
+    // RAYCASTING..
+    let currentAngle = playerAngle + HALF_FOV;
     let rayStartX = Math.floor(playerX / MAP_SCALE) * MAP_SCALE; //convert player position to start of tile
     let rayStartY = Math.floor(playerY / MAP_SCALE) * MAP_SCALE;
 
-    let currentSin = Math.sin(currentAngle);
-    currentSin = currentSin ? currentSin : 0.000001;
-    let currentCos = Math.cos(currentAngle);
-    currentCos = currentCos ? currentCos : 0.000001;
+    // loop over casted rays
+    for(let ray = 0; ray < WIDTH; ray++){
 
+        // get current angle sin and cos
+        let currentSin = Math.sin(currentAngle);
+        currentSin = currentSin ? currentSin : 0.000001;
+        let currentCos = Math.cos(currentAngle);
+        currentCos = currentCos ? currentCos : 0.000001;
 
-    // vertical line intersection
-    let rayEndX, rayEndY, rayDirectionX, verticalDepth;
-    if (currentSin > 0) {
-        rayEndX = rayStartX + MAP_SCALE;
-        rayDirectionX = 1;
-    } else {
-        rayEndX = rayStartX; rayDirectionX = -1;
-    }
-
-    for (let offset = 0; offset < MAP_RANGE; offset += MAP_SCALE){
-        verticalDepth = (rayEndX - playerX) / currentSin;
-        rayEndY = playerY + verticalDepth * currentCos;
-        let mapTargetX = Math.floor(rayEndX / MAP_SCALE); //which tile?
-        let mapTargetY = Math.floor(rayEndY / MAP_SCALE);
-        if(currentSin <= 0){
-            mapTargetX += rayDirectionX;
+        // vertical line intersection
+        let rayEndX, rayEndY, rayDirectionX, verticalDepth;
+        if (currentSin > 0) {
+            rayEndX = rayStartX + MAP_SCALE;
+            rayDirectionX = 1;
+        } else {
+            rayEndX = rayStartX; rayDirectionX = -1;
         }
-        let targetSquare = mapTargetY * MAP_SIZE + mapTargetX;
-        if(targetSquare < 0 || targetSquare > map.length - 1){
-            break;
+
+        for (let offset = 0; offset < MAP_RANGE; offset += MAP_SCALE){
+            verticalDepth = (rayEndX - playerX) / currentSin;
+            rayEndY = playerY + verticalDepth * currentCos;
+            let mapTargetX = Math.floor(rayEndX / MAP_SCALE); //which tile?
+            let mapTargetY = Math.floor(rayEndY / MAP_SCALE);
+            if(currentSin <= 0){
+                mapTargetX += rayDirectionX;
+            }
+            let targetSquare = mapTargetY * MAP_SIZE + mapTargetX;
+            if(targetSquare < 0 || targetSquare > map.length - 1){
+                break;
+            }
+            if (map[targetSquare] != 0){
+                break;
+            }
+            rayEndX += rayDirectionX * MAP_SCALE;
         }
-        if (map[targetSquare] != 0){
-            break;
-        }
-        rayEndX += rayDirectionX * MAP_SCALE;
-    }
 
-    // temp endX and endY targets
-    let tempY = rayEndY;
-    let tempX = rayEndX;
-
-    /* draw ray
-    context.strokeStyle = 'Yellow';
-    context.lineWidth = 1;
-    context.beginPath();
-    context.moveTo(playerMapX, playerMapY);
-    context.lineTo(rayEndX + mapOffsetX, rayEndY + mapOffsetY);
-    context.stroke();
-    */
-
+        // temp endX and endY targets
+        let tempY = rayEndY;
+        let tempX = rayEndX;
      
-    // horizontal line intersection
-    var rayDirectionY, horizontalDepth;
-    if (currentCos > 0) {
-        rayEndY = rayStartY + MAP_SCALE;
-        rayDirectionY = 1;
-    } else {
-        rayEndY = rayStartY; 
-        rayDirectionY = -1;
+        // horizontal line intersection
+        var rayDirectionY, horizontalDepth;
+        if (currentCos > 0) {
+            rayEndY = rayStartY + MAP_SCALE;
+            rayDirectionY = 1;
+        } else {
+            rayEndY = rayStartY; 
+            rayDirectionY = -1;
+        }
+
+        for (let offset = 0; offset < MAP_RANGE; offset += MAP_SCALE){
+            horizontalDepth = (rayEndY - playerY) / currentCos;
+            rayEndX = playerX + horizontalDepth * currentSin;
+            let mapTargetX = Math.floor(rayEndX / MAP_SCALE); //which tile?
+            let mapTargetY = Math.floor(rayEndY / MAP_SCALE);
+            if(currentCos <= 0){
+                mapTargetY += rayDirectionY;
+            }
+            let targetSquare = mapTargetY * MAP_SIZE + mapTargetX;
+            if(targetSquare < 0 || targetSquare > map.length - 1){
+                break;
+            }
+            if (map[targetSquare] != 0){
+                break;
+            }
+            rayEndY += rayDirectionY * MAP_SCALE;
+        }
+
+        let endX = verticalDepth < horizontalDepth ? tempX : rayEndX;
+        let endY = verticalDepth < horizontalDepth ? tempY : rayEndY;
+
+        // draw ray
+        context.strokeStyle = 'Yellow';
+        context.lineWidth = 1;
+        context.beginPath();
+        context.moveTo(playerMapX, playerMapY);
+        context.lineTo(endX + mapOffsetX, endY + mapOffsetY);
+        context.stroke();
+
+
+        // update current angle
+        currentAngle -= STEP_ANGLE;
+        
     }
 
-    for (let offset = 0; offset < MAP_RANGE; offset += MAP_SCALE){
-        horizontalDepth = (rayEndY - playerY) / currentCos;
-        rayEndX = playerX + horizontalDepth * currentSin;
-        let mapTargetX = Math.floor(rayEndX / MAP_SCALE); //which tile?
-        let mapTargetY = Math.floor(rayEndY / MAP_SCALE);
-        if(currentCos <= 0){
-            mapTargetY += rayDirectionY;
-        }
-        let targetSquare = mapTargetY * MAP_SIZE + mapTargetX;
-        if(targetSquare < 0 || targetSquare > map.length - 1){
-            break;
-        }
-        if (map[targetSquare] != 0){
-            break;
-        }
-        rayEndY += rayDirectionY * MAP_SCALE;
-    }
-
-    let endX = verticalDepth < horizontalDepth ? tempX : rayEndX;
-    let endY = verticalDepth < horizontalDepth ? tempY : rayEndY;
-
-    // draw ray
-    context.strokeStyle = 'Yellow';
-    context.lineWidth = 1;
-    context.beginPath();
-    context.moveTo(playerMapX, playerMapY);
-    context.lineTo(endX + mapOffsetX, endY + mapOffsetY);
-    context.stroke();
-    
-
-    
     // infinite loop
     setTimeout(gameLoop, cycleDelay);
 
