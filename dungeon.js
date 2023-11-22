@@ -198,13 +198,14 @@ function gameLoop(){
     let currentCos = Math.cos(currentAngle);
     currentCos = currentCos ? currentCos : 0.000001;
 
+
     // vertical line intersection
     let rayEndX, rayEndY, rayDirectionX, verticalDepth;
     if (currentSin > 0) {
         rayEndX = rayStartX + MAP_SCALE;
         rayDirectionX = 1;
     } else {
-        rayEndX = rayStartX, rayDirectionX = -1;
+        rayEndX = rayStartX; rayDirectionX = -1;
     }
 
     for (let offset = 0; offset < MAP_RANGE; offset += MAP_SCALE){
@@ -225,13 +226,60 @@ function gameLoop(){
         rayEndX += rayDirectionX * MAP_SCALE;
     }
 
-    // draw ray
+    // temp endX and endY targets
+    let tempY = rayEndY;
+    let tempX = rayEndX;
+
+    /* draw ray
     context.strokeStyle = 'Yellow';
     context.lineWidth = 1;
     context.beginPath();
     context.moveTo(playerMapX, playerMapY);
     context.lineTo(rayEndX + mapOffsetX, rayEndY + mapOffsetY);
     context.stroke();
+    */
+
+     
+    // horizontal line intersection
+    var rayDirectionY, horizontalDepth;
+    if (currentCos > 0) {
+        rayEndY = rayStartY + MAP_SCALE;
+        rayDirectionY = 1;
+    } else {
+        rayEndY = rayStartY; 
+        rayDirectionY = -1;
+    }
+
+    for (let offset = 0; offset < MAP_RANGE; offset += MAP_SCALE){
+        horizontalDepth = (rayEndY - playerY) / currentCos;
+        rayEndX = playerX + horizontalDepth * currentSin;
+        let mapTargetX = Math.floor(rayEndX / MAP_SCALE); //which tile?
+        let mapTargetY = Math.floor(rayEndY / MAP_SCALE);
+        if(currentCos <= 0){
+            mapTargetY += rayDirectionY;
+        }
+        let targetSquare = mapTargetY * MAP_SIZE + mapTargetX;
+        if(targetSquare < 0 || targetSquare > map.length - 1){
+            break;
+        }
+        if (map[targetSquare] != 0){
+            break;
+        }
+        rayEndY += rayDirectionY * MAP_SCALE;
+    }
+
+    let endX = verticalDepth < horizontalDepth ? tempX : rayEndX;
+    let endY = verticalDepth < horizontalDepth ? tempY : rayEndY;
+
+    // draw ray
+    context.strokeStyle = 'Yellow';
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(playerMapX, playerMapY);
+    context.lineTo(endX + mapOffsetX, endY + mapOffsetY);
+    context.stroke();
+    
+
     
     // infinite loop
     setTimeout(gameLoop, cycleDelay);
