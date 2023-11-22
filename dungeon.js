@@ -168,7 +168,7 @@ const STEP_ANGLE = FOV / WIDTH;
 const WALLS = [];
 
 // load wall textures
-for(let fileName = 0; fileName < 11; fileName++){
+for(let fileName = 0; fileName < 13; fileName++){
     let image = document.createElement('img');
     image.src = 'assets/' + fileName + '.png';
     WALLS.push(image);
@@ -222,7 +222,9 @@ function gameLoop(){
     let playerMapY = (playerY / MAP_SCALE) * 5 + mapOffsetY;
 
     // draw background (floor and ceiling)
-    context.drawImage(WALLS[10], canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT);
+    context.drawImage(WALLS[11], canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT);
+
+    // TODO: parallax scrolling
 
 
     // RAYCASTING..
@@ -310,7 +312,7 @@ function gameLoop(){
         context.fillRect(mapOffsetX + ray, mapOffsetY + (HALF_HEIGHT - wallHeight / 2), 1, wallHeight);
         // Draw texture 
         context.drawImage(
-            WALLS[9],
+            WALLS[12],
             textureOffset,                                               // source image x offset
             0,                                                           // source image y offset
             1,                                                           // source image width
