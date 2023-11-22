@@ -26,6 +26,7 @@ const MAP_RANGE = MAP_SCALE * MAP_SIZE;
 const MAP_SPEED = (MAP_SCALE / 2) / 10; // speed of player movement
 
 // each integer associate with different textures 
+// maybe have separate file for multiple maps
 let map = [
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
     1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,
@@ -266,6 +267,7 @@ function gameLoop(){
                 break;
             }
             if (map[targetSquare] != 0){
+                textureY = map[targetSquare];
                 break;
             }
             rayEndX += rayDirectionX * MAP_SCALE;
@@ -296,6 +298,7 @@ function gameLoop(){
                 break;
             }
             if (map[targetSquare] != 0){
+                textureX = map[targetSquare];
                 break;
             }
             rayEndY += rayDirectionY * MAP_SCALE;
@@ -305,17 +308,18 @@ function gameLoop(){
         // 3D Projection (one pixel rect per ray)
         // fisheye caused by longer rays the further offcenter
         let depth = verticalDepth < horizontalDepth ? verticalDepth : horizontalDepth;
+        let textureImage = verticalDepth < horizontalDepth ? textureY : textureX;
         // find beginning of tile, so we know where to start drawing texture
         let textureOffset = verticalDepth < horizontalDepth ? textureEndY : textureEndX;
         textureOffset = Math.floor(textureOffset) - Math.floor(textureOffset / MAP_SCALE) * MAP_SCALE;
         //fix fisheye
         depth *= Math.cos(playerAngle - currentAngle);
-        let wallHeight = Math.floor(Math.min(MAP_SCALE * 300 / (depth + 0.0001)), 5000);
+        let wallHeight = Math.floor(Math.min(MAP_SCALE * 280 / (depth + 0.0001)), 5000);
         context.fillStyle = verticalDepth < horizontalDepth ? 'black': 'black';
         context.fillRect(mapOffsetX + ray, mapOffsetY + (HALF_HEIGHT - wallHeight / 2), 1, wallHeight);
         // Draw texture 
         context.drawImage(
-            WALLS[12],
+            WALLS[textureImage],
             textureOffset,                                               // source image x offset
             0,                                                           // source image y offset
             1,                                                           // source image width
