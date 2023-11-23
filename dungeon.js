@@ -8,6 +8,9 @@
 const canvas = document.getElementById('canvas');
 const context = canvas.getContext('2d');
 
+const parallaxCanvas = document.getElementById('parallax');
+const parallaxContext = parallaxCanvas.getContext('2d');
+
 // screen
 const WIDTH = 300, HALF_WIDTH = 150;
 const HEIGHT = 200, HALF_HEIGHT = 100;
@@ -145,7 +148,6 @@ let playerMoveAngle = 0;
 
 // handle user inputs
 document.onkeydown = function(event){
-    console.log(event.keyCode);
     switch(event.keyCode){
         // ArrowDown (40), s=83
         case 83: 
@@ -204,12 +206,39 @@ const STEP_ANGLE = FOV / WIDTH;
 // graphics/textures
 const WALLS = [];
 
-// load wall textures
-for(let fileName = 0; fileName < 13; fileName++){
+/* load wall textures
+for(let fileName = 0; fileName < 14; fileName++){
     let image = document.createElement('img');
     image.src = 'assets/' + fileName + '.png';
     WALLS.push(image);
+}*/
+
+// A function to create and load an image
+function loadImage(fileName) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.src = 'assets/' + fileName + '.png';
+
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Failed to load image: ${fileName}`));
+  });
 }
+
+// An array of image file names to load
+const wallFileNames = Array.from({ length: 14 }, (_, i) => i.toString());
+
+// Load all images and populate the WALLS array
+Promise.all(wallFileNames.map(loadImage))
+  .then((images) => {
+    // All images are loaded, now you can use them
+    images.forEach((image) => {
+      WALLS.push(image);
+    });
+
+  })
+  .catch((error) => {
+    console.error(error);
+  });
 
 // game loop
 function gameLoop(){
@@ -259,9 +288,75 @@ function gameLoop(){
     let playerMapY = (playerY / MAP_SCALE) * 5 + mapOffsetY;
 
     // draw background (floor and ceiling)
-    context.drawImage(WALLS[11], canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT);
+    //context.drawImage(WALLS[11], canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT);
 
     // TODO: parallax scrolling
+    function parallaxBackground() {
+        // Calculate the background position based on player's angle
+        const offsetX = -playerAngle * 200; // Adjust the factor based on your desired speed
+    
+        // Clear the canvas
+        context.clearRect(0, 0, canvas.width, canvas.height);
+    
+        // Draw the static background (floor and ceiling)
+        context.drawImage(WALLS[11], canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT);
+    
+        // Draw the looping background without stretching
+        let sourceX = offsetX % WALLS[13].width; // Adjusted X position for looping
+    
+        // Adjust sourceX to ensure it wraps around correctly
+        if (sourceX < 0) {
+            sourceX += WALLS[13].width;
+        }
+    
+        const sourceWidth = Math.min(WALLS[13].width - sourceX, canvas.width); // Width of the area to show
+    
+        // Check if the image needs to loop
+        if (sourceWidth < canvas.width) {
+            // Draw the first part of the image
+            context.drawImage(
+                WALLS[13],
+                sourceX, // X position in the source image
+                0, // Y position in the source image
+                sourceWidth, // Width of the area to show from the source image
+                WALLS[13].height, // Height of the source image (assuming it's the full height)
+                canvas.width / 2 - HALF_WIDTH, // X position on the canvas
+                canvas.height / 2 - HALF_HEIGHT, // Y position on the canvas
+                sourceWidth, // Width to draw on the canvas (no stretching)
+                200 // Height to draw on the canvas
+            );
+    
+            // Draw the second part of the image to complete the loop
+            context.drawImage(
+                WALLS[13],
+                0, // Start from the left of the source image
+                0, // Y position in the source image
+                canvas.width - sourceWidth, // Width of the remaining area to show
+                WALLS[13].height, // Height of the source image (assuming it's the full height)
+                canvas.width / 2 + sourceWidth - HALF_WIDTH, // X position on the canvas
+                canvas.height / 2 - HALF_HEIGHT, // Y position on the canvas
+                canvas.width - sourceWidth, // Width to draw on the canvas (no stretching)
+                200 // Height to draw on the canvas
+            );
+        } else {
+            // Draw the entire image without looping
+            context.drawImage(
+                WALLS[13],
+                sourceX, // X position in the source image
+                0, // Y position in the source image
+                sourceWidth, // Width of the area to show from the source image
+                WALLS[13].height, // Height of the source image (assuming it's the full height)
+                canvas.width / 2 - HALF_WIDTH, // X position on the canvas
+                canvas.height / 2 - HALF_HEIGHT, // Y position on the canvas
+                sourceWidth, // Width to draw on the canvas (no stretching)
+                200 // Height to draw on the canvas
+            );
+        }
+    }
+    
+    parallaxBackground();
+
+
 
 
     // RAYCASTING..
