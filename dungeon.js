@@ -1,6 +1,6 @@
 /**************************************************************
  * 
- *                jsDungeon - make it sp00ky
+ *                jsDungeon - make it sp00ky (like fps pacman/zelda)
  * 
  **************************************************************/
 
@@ -194,8 +194,8 @@ function loadImage(fileName) {
   });
 }
 
-// An array of image file names to load
-const wallFileNames = Array.from({ length: 14 }, (_, i) => i.toString());
+// An array of image file names to load (TODO: check num of files in folder so we dont do this manually)
+const wallFileNames = Array.from({ length: 16 }, (_, i) => i.toString());
 
 // Load all images and populate the WALLS array
 Promise.all(wallFileNames.map(loadImage))
@@ -270,6 +270,10 @@ function gameLoop(){
     function parallaxBackground() {
         // Increment the offsetX for continuous looping
         offsetX += 0.2; // Adjust the speed 
+
+        // change background textures here..
+        let staticBG = WALLS[11];
+        let parallaxBG = WALLS[13];
     
         // Calculate the background position based on player's angle
         const playerOffsetX = -playerAngle * 200; 
@@ -279,26 +283,26 @@ function gameLoop(){
         context.clearRect(0, 0, canvas.width, canvas.height);
 
         // Draw the static background (floor and ceiling)
-        context.drawImage(WALLS[11], canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT);
+        context.drawImage(staticBG, canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT);
 
         // Draw the looping background without stretching
-        let sourceX = totalOffsetX % WALLS[13].width; // Adjusted X position for looping
+        let sourceX = totalOffsetX % parallaxBG.width; // Adjusted X position for looping
 
         // Adjust sourceX to ensure it wraps around correctly
         if (sourceX < 0) {
-            sourceX += WALLS[13].width;
+            sourceX += parallaxBG.width;
         }
 
         // Calculate sourceWidth based on the remaining space on the canvas
-        const sourceWidth = Math.min(WALLS[13].width - sourceX, canvas.width);
+        const sourceWidth = Math.min(parallaxBG.width - sourceX, canvas.width);
 
         // Draw the first part of the image
         context.drawImage(
-            WALLS[13],
+            parallaxBG,
             sourceX,                            // X position in the source image
             0,                                  // Y position in the source image
             sourceWidth,                        // Width of the area to show from the source image
-            WALLS[13].height,                   // Height of the source image (assuming it's the full height)
+            parallaxBG.height,                   // Height of the source image (assuming it's the full height)
             canvas.width / 2 - HALF_WIDTH,      // X position on the canvas
             canvas.height / 2 - HALF_HEIGHT,    // Y position on the canvas
             sourceWidth,                        // Width to draw on the canvas (no stretching)
@@ -309,11 +313,11 @@ function gameLoop(){
         if (sourceWidth < canvas.width) {
             // Draw the second part of the image to complete the loop
             context.drawImage(
-                WALLS[13],
+                parallaxBG,
                 0,                                              // Start from the left of the source image
                 0,                                              // Y position in the source image
                 canvas.width - sourceWidth,                     // Width of the remaining area to show
-                WALLS[13].height,                               // Height of the source image (assuming it's the full height)
+                parallaxBG.height,                               // Height of the source image (assuming it's the full height)
                 canvas.width / 2 + sourceWidth - HALF_WIDTH,    // X position on the canvas
                 canvas.height / 2 - HALF_HEIGHT,                // Y position on the canvas
                 canvas.width - sourceWidth,                     // Width to draw on the canvas (no stretching)
@@ -408,15 +412,15 @@ function gameLoop(){
         // fisheye caused by longer rays the further offcenter
         let depth = verticalDepth < horizontalDepth ? verticalDepth : horizontalDepth;
         let textureImage = verticalDepth < horizontalDepth ? textureY : textureX;
+       
         // find beginning of tile, so we know where to start drawing texture
         let textureOffset = verticalDepth < horizontalDepth ? textureEndY : textureEndX;
         textureOffset = Math.floor(textureOffset) - Math.floor(textureOffset / MAP_SCALE) * MAP_SCALE;
         //fix fisheye
         depth *= Math.cos(playerAngle - currentAngle);
+        
         // Calculate the actual wallHeight based on the texture offset
         let wallHeight = Math.floor(Math.min(MAP_SCALE * 280 / (depth + 0.0001)));
-
-        
         // Ensure the wallHeight doesn't exceed the maximum height
         wallHeight = Math.min(wallHeight, 5000);
 
@@ -424,9 +428,10 @@ function gameLoop(){
         //context.fillStyle = verticalDepth < horizontalDepth ? 'black': 'black';
         //context.fillRect(mapOffsetX + ray, mapOffsetY + (HALF_HEIGHT - wallHeight / 2), 1, wallHeight);
 
-        // Draw texture 
+        //Draw texture (change depending on texture)
+        let wallTexture = WALLS[1];
         context.drawImage(
-            WALLS[textureImage],
+            wallTexture,
             textureOffset,                                               // source image x offset
             0,                                                           // source image y offset
             1,                                                           // source image width
@@ -436,7 +441,57 @@ function gameLoop(){
             1,                                                           // target image width
             wallHeight,                                                  // target image height
         );
+
+        // TODO: make only top of walls stretch so that we can have tall walls that look nice
+        /*
+        let depth = verticalDepth < horizontalDepth ? verticalDepth : horizontalDepth;
+        let textureImage = verticalDepth < horizontalDepth ? textureY : textureX;
+
+        // find beginning of tile, so we know where to start drawing texture
+        let textureOffset = verticalDepth < horizontalDepth ? textureEndY : textureEndX;
+        textureOffset = Math.floor(textureOffset) - Math.floor(textureOffset / MAP_SCALE) * MAP_SCALE;
+
+        // fix fisheye
+        depth *= Math.cos(playerAngle - currentAngle);
+
+        // Calculate the height of the portion of the wall to be stretched
+        let wallHeight = Math.floor(Math.min(MAP_SCALE * 500 / (depth + 0.0001)));
+        let maxStretchedHeight = 50; // Adjust the maximum stretched height as needed
+        let stretchedHeight = Math.min(maxStretchedHeight, wallHeight);
+
+        // Calculate the bottom part of the wall
+        let bottomWallHeight = wallHeight - stretchedHeight;
+
+        // Draw the bottom part of the wall
+        context.drawImage(
+            WALLS[textureImage],
+            textureOffset,                                       // source image x offset
+            0,                                                   // source image y offset
+            1,                                                   // source image width
+            64,                                                  // source image height
+            mapOffsetX + ray,                                    // target image x offset 
+            mapOffsetY + (HALF_HEIGHT - Math.floor(bottomWallHeight / 2)),  // target image y offset
+            1,                                                   // target image width
+            bottomWallHeight,                                    // target image height
+        );
+
+        // Draw the stretched top part of the wall
+        let topWallY = mapOffsetY + (HALF_HEIGHT - Math.floor(wallHeight / 2));
         
+        if (stretchedHeight > 0) {
+            topWallY -= stretchedHeight - 30; // Adjust the calculation to remove the gap
+            context.drawImage(
+                WALLS[textureImage],
+                textureOffset,                                       // source image x offset
+                0,                                                   // source image y offset
+                1,                                                   // source image width
+                stretchedHeight,                                     // source image height
+                mapOffsetX + ray,                                    // target image x offset 
+                topWallY,                                            // target image y offset
+                1,                                                   // target image width
+                stretchedHeight,                                     // target image height
+            );
+        }*/
 
         // update current angle
         currentAngle -= STEP_ANGLE;
