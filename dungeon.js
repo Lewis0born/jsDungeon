@@ -8,8 +8,8 @@
 const canvas = document.getElementById('canvas');
 const context = canvas.getContext('2d');
 
-const parallaxCanvas = document.getElementById('parallax');
-const parallaxContext = parallaxCanvas.getContext('2d');
+//const parallaxCanvas = document.getElementById('parallax');
+//const parallaxContext = parallaxCanvas.getContext('2d');
 
 // screen
 const WIDTH = 300, HALF_WIDTH = 150;
@@ -230,8 +230,8 @@ function gameLoop(){
     // dynamic resizing of canvas
     canvas.width = window.innerWidth * 0.2;
     canvas.height = window.innerHeight * 0.2;
-    parallaxCanvas.width = window.innerWidth * 0.2;
-    parallaxCanvas.height = window.innerHeight * 0.2;
+   // parallaxCanvas.width = window.innerWidth * 0.2;
+   //parallaxCanvas.height = window.innerHeight * 0.2;
 
     // update player position
     // Move forward along playerAngle (* by map_speed makes movement speed relative to map)
@@ -262,7 +262,8 @@ function gameLoop(){
     // draw background (floor and ceiling)
     //context.drawImage(WALLS[11], canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT);
 
-    // TODO: parallax scrolling
+    // parallax scrolling
+    // TODO: issue with right extending
     function parallaxBackground() {
         // Calculate the background position based on player's angle
         const offsetX = -playerAngle * 200; // Adjust the factor based on your desired speed
@@ -270,7 +271,7 @@ function gameLoop(){
         // Clear the canvas
         context.clearRect(0, 0, canvas.width, canvas.height);
     
-        // Draw the static background (floor and ceiling)
+        // Draw the static background(floor and ceiling), removes seam from parallax looping
         context.drawImage(WALLS[11], canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT);
     
         // Draw the looping background without stretching
@@ -281,23 +282,24 @@ function gameLoop(){
             sourceX += WALLS[13].width;
         }
     
-        const sourceWidth = Math.min(WALLS[13].width - sourceX, canvas.width); // Width of the area to show
+        // Calculate sourceWidth based on the remaining space on the canvas
+        const sourceWidth = Math.min(WALLS[13].width - sourceX, canvas.width);
     
-        // Check if the image needs to loop
+        // Draw the first part of the image
+        context.drawImage(
+            WALLS[13],
+            sourceX, // X position in the source image
+            0, // Y position in the source image
+            sourceWidth, // Width of the area to show from the source image
+            WALLS[13].height, // Height of the source image (assuming it's the full height)
+            canvas.width / 2 - HALF_WIDTH, // X position on the canvas
+            canvas.height / 2 - HALF_HEIGHT, // Y position on the canvas
+            sourceWidth, // Width to draw on the canvas (no stretching)
+            200 // Height to draw on the canvas
+        );
+    
+        // Check if the image needs to loop to the second part
         if (sourceWidth < canvas.width) {
-            // Draw the first part of the image
-            context.drawImage(
-                WALLS[13],
-                sourceX, // X position in the source image
-                0, // Y position in the source image
-                sourceWidth, // Width of the area to show from the source image
-                WALLS[13].height, // Height of the source image (assuming it's the full height)
-                canvas.width / 2 - HALF_WIDTH, // X position on the canvas
-                canvas.height / 2 - HALF_HEIGHT, // Y position on the canvas
-                sourceWidth, // Width to draw on the canvas (no stretching)
-                200 // Height to draw on the canvas
-            );
-    
             // Draw the second part of the image to complete the loop
             context.drawImage(
                 WALLS[13],
@@ -310,24 +312,18 @@ function gameLoop(){
                 canvas.width - sourceWidth, // Width to draw on the canvas (no stretching)
                 200 // Height to draw on the canvas
             );
-        } else {
-            // Draw the entire image without looping
-            context.drawImage(
-                WALLS[13],
-                sourceX, // X position in the source image
-                0, // Y position in the source image
-                sourceWidth, // Width of the area to show from the source image
-                WALLS[13].height, // Height of the source image (assuming it's the full height)
-                canvas.width / 2 - HALF_WIDTH, // X position on the canvas
-                canvas.height / 2 - HALF_HEIGHT, // Y position on the canvas
-                sourceWidth, // Width to draw on the canvas (no stretching)
-                200 // Height to draw on the canvas
-            );
         }
+
+        
+
+       
     }
     
     parallaxBackground();
-
+    
+    // Draw the static background on the right side (temporary fix to parallax overextending)
+    context.fillStyle = 'black';
+    context.fillRect(canvas.width -38, 0, 50, canvas.height);
 
 
 
