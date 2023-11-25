@@ -195,7 +195,7 @@ function loadImage(fileName) {
 }
 
 // An array of image file names to load (TODO: check num of files in folder so we dont do this manually)
-const wallFileNames = Array.from({ length: 16 }, (_, i) => i.toString());
+const wallFileNames = Array.from({ length: 17 }, (_, i) => i.toString());
 
 // Load all images and populate the WALLS array
 Promise.all(wallFileNames.map(loadImage))
@@ -263,17 +263,18 @@ function gameLoop(){
     let playerMapY = (playerY / MAP_SCALE) * 5 + mapOffsetY;
 
     // draw background (floor and ceiling)
-    //context.drawImage(WALLS[11], canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT);
+    context.drawImage(WALLS[11], canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT);
 
     // parallax scrolling
-    // TODO: issue with right extending (currently covered up)
+    // TODO: issue with right extending (currently covered up), and another layer (e.g. stars clouds moving etc.)
     function parallaxBackground() {
         // Increment the offsetX for continuous looping
         offsetX += 0.2; // Adjust the speed 
 
         // change background textures here..
         let staticBG = WALLS[11];
-        let parallaxBG = WALLS[13];
+        let foreGround = WALLS[13];    // this layer for mountains/buildings (SHOULD HAVE TRANSPARENCY)etc.
+        let backGround = WALLS[13];    // stars/clouds/sky
     
         // Calculate the background position based on player's angle
         const playerOffsetX = -playerAngle * 200; 
@@ -285,24 +286,64 @@ function gameLoop(){
         // Draw the static background (floor and ceiling)
         context.drawImage(staticBG, canvas.width / 2 - HALF_WIDTH, canvas.height / 2 - HALF_HEIGHT);
 
-        // Draw the looping background without stretching
-        let sourceX = totalOffsetX % parallaxBG.width; // Adjusted X position for looping
+        // Draw the looping additional layer without stretching
+        let backGroundSourceX = totalOffsetX % backGround.width; // Adjusted X position for looping
+
+        // Adjust backGroundSourceX to ensure it wraps around correctly
+        if (backGroundSourceX < 0) {
+            backGroundSourceX += backGround.width;
+        }
+
+        // Calculate backGroundSourceWidth based on the remaining space on the canvas
+         const backGroundSourceWidth = Math.min(backGround.width - backGroundSourceX, canvas.width);
+
+        // Draw the first part of the additional layer
+        context.drawImage(
+            backGround,
+            backGroundSourceX,                          // X position in the source image
+            0,                                              // Y position in the source image
+            backGroundSourceWidth,                     // Width of the area to show from the source image
+            backGround.height,                         // Height of the source image (assuming it's the full height)
+            canvas.width / 2 - HALF_WIDTH,                  // X position on the canvas
+            canvas.height / 2 - HALF_HEIGHT,                // Y position on the canvas
+            backGroundSourceWidth,                     // Width to draw on the canvas (no stretching)
+            200                                             // Height to draw on the canvas
+        );
+
+        // Check if the additional layer image needs to loop to the second part
+        if (backGroundSourceWidth < canvas.width) {
+            // Draw the second part of the additional layer to complete the loop
+            context.drawImage(
+                backGround,
+                0,                                              // Start from the left of the source image
+                0,                                              // Y position in the source image
+                canvas.width - backGroundSourceWidth,    // Width of the remaining area to show
+                backGround.height,                         // Height of the source image (assuming it's the full height)
+                canvas.width / 2 + backGroundSourceWidth - HALF_WIDTH, // X position on the canvas
+                canvas.height / 2 - HALF_HEIGHT,                // Y position on the canvas
+                canvas.width - backGroundSourceWidth,    // Width to draw on the canvas (no stretching)
+                200                                             // Height to draw on the canvas
+            );
+        }
+
+        // Draw the looping background without stretching (add totalOffsetX instead of player to have constant motion)
+        let sourceX = totalOffsetX % foreGround.width; // Adjusted X position for looping
 
         // Adjust sourceX to ensure it wraps around correctly
         if (sourceX < 0) {
-            sourceX += parallaxBG.width;
+            sourceX += foreGround.width;
         }
 
         // Calculate sourceWidth based on the remaining space on the canvas
-        const sourceWidth = Math.min(parallaxBG.width - sourceX, canvas.width);
+        const sourceWidth = Math.min(foreGround.width - sourceX, canvas.width);
 
         // Draw the first part of the image
         context.drawImage(
-            parallaxBG,
+            foreGround,
             sourceX,                            // X position in the source image
             0,                                  // Y position in the source image
             sourceWidth,                        // Width of the area to show from the source image
-            parallaxBG.height,                   // Height of the source image (assuming it's the full height)
+            foreGround.height,                   // Height of the source image (assuming it's the full height)
             canvas.width / 2 - HALF_WIDTH,      // X position on the canvas
             canvas.height / 2 - HALF_HEIGHT,    // Y position on the canvas
             sourceWidth,                        // Width to draw on the canvas (no stretching)
@@ -313,11 +354,11 @@ function gameLoop(){
         if (sourceWidth < canvas.width) {
             // Draw the second part of the image to complete the loop
             context.drawImage(
-                parallaxBG,
+                foreGround,
                 0,                                              // Start from the left of the source image
                 0,                                              // Y position in the source image
                 canvas.width - sourceWidth,                     // Width of the remaining area to show
-                parallaxBG.height,                               // Height of the source image (assuming it's the full height)
+                foreGround.height,                               // Height of the source image (assuming it's the full height)
                 canvas.width / 2 + sourceWidth - HALF_WIDTH,    // X position on the canvas
                 canvas.height / 2 - HALF_HEIGHT,                // Y position on the canvas
                 canvas.width - sourceWidth,                     // Width to draw on the canvas (no stretching)
